@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChatGPT</title>
+<style>
+    body {
+        background-image: url('./bg.png');
+        /* 可选：调整背景属性 */
+        background-attachment: fixed;  /* 背景固定不动 */
+        background-repeat: no-repeat;  /* 不重复 */
+        background-size: cover;        /* 图片覆盖整个区域 */
+    }
+</style>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f57f;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .chat-container {
+    width: 1000px;
+    max-width: 360%;
+    background: rgba(255, 255, 255, 0.502);
+    border-radius: 10px;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  #chatbox {
+    height: 400px;
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+    overflow-y: scroll;
+  }
+  .message {
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 10px;
+    max-width: 70%;
+  }
+  .user {
+    background-color: #d1e7dd81;
+    color: rgba(0, 0, 0, 0.491);
+    text-align: right;
+    margin-left: auto;
+  }
+  .bot {
+    background-color: #cfe2ff7e;
+    color: rgba(0, 0, 0, 0.5);
+    text-align: left;
+    margin-right: auto;
+  }
+  .input-container {
+    display: flex;
+    border-top: 1px solid #dddddd80;
+  }
+  #msgInput {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    outline: none;
+    font-size: 16px;
+  }
+  .send-button {
+    background-color: #0d6dfd;
+    color: rgb(255, 255, 255);
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  .send-button:hover {
+    background-color: #0b5dd7;
+  }
+  .loading-indicator {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .loading-indicator.show {
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<div class="chat-container">
+  <h2 style="text-align: center; background: #0d6dfd; color: rgb(255, 255, 255); padding: 10px; margin: 0;">ChatGPT-4.0</h2>
+  <div id="chatbox"></div>
+  <div class="input-container">
+    <input type="text" id="msgInput" placeholder="请输入您的消息..." style="width:100%;">
+    <button class="send-button" onclick="sendMessage()">发送</button>
+  </div>
+  <div class="loading-indicator" id="loadingIndicator">正在加载中...</div>
+</div>
+
+<script>
+const sessionId = '10086'; // 这里可以设置一个会话ID
+
+function sendMessage() {
+    var userInput = document.getElementById('msgInput').value;
+    if (userInput.trim() === '') return; // 如果没有输入则不发送
+    
+    addMessage(userInput, 'user');
+    
+    // 显示加载指示器
+    document.getElementById('loadingIndicator').classList.add('show');
+    
+    // 构造API请求
+    var apiUrl = `https://api.zrzh.asia/api/ChatGPT.php?message=${encodeURIComponent(userInput)}&id=${sessionId}&type=json`;
+    
+    fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json(); // 假设API返回json格式数据
+        })
+        .then(data => {
+            // 隐藏加载指示器
+            document.getElementById('loadingIndicator').classList.remove('show');
+            
+            // 根据API的实际响应结构解析并显示回复
+            if (data && data.data && data.data.content) {
+                addMessage(data.data.content, 'bot');
+            } else {
+                console.error("Unexpected response from the API:", data);
+                addMessage("[错误] 无法获取回复", 'bot');
+            }
+        })
+        .catch(error => {
+            // 隐藏加载指示器
+            document.getElementById('loadingIndicator').classList.remove('show');
+            
+            console.error('Error:', error); // 记录错误信息
+            addMessage(`[错误] 无法获取回复: ${error.message}`, 'bot');
+        });
+        
+    // 清空输入框
+    document.getElementById('msgInput').value = '';
+}
+
+function addMessage(text, sender) {
+    var chatbox = document.getElementById('chatbox');
+    var messageElement = document.createElement('div');
+    messageElement.className = 'message ' + sender;
+    messageElement.textContent = text;  // 使用textContent而不是content
+    chatbox.appendChild(messageElement);
+    chatbox.scrollTop = chatbox.scrollHeight; // 自动滚动到底部
+}
+</script>
+
+</body>
+</html>
